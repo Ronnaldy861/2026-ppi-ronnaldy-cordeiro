@@ -1,2 +1,3 @@
 # 2026-ppi-ronnaldy-cordeiro
-Repositório da disciplina PPI - IFRN
+
+Projeto da disciplina PPI desenvolvido seguindo o tutorial oficial do Flask.
