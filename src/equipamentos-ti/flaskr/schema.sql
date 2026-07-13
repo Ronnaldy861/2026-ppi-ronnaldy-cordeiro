@@ -20,3 +20,7 @@ CREATE TABLE equipamento (
     FOREIGN KEY (usuario_id)
         REFERENCES user(id)
 );
+
+    FOREIGN KEY (usuario_id)
+        REFERENCES user(id)
+);

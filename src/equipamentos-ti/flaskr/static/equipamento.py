@@ -7,8 +7,8 @@ from flask import (
     request,
     url_for,
 )
-
 from werkzeug.exceptions import abort
+import sqlite3
 
 from flaskr.auth import login_required
 from flaskr.db import get_db
@@ -18,7 +18,6 @@ bp = Blueprint("equipamento", __name__)
 
 @bp.route("/")
 def index():
-
     db = get_db()
 
     equipamentos = db.execute(
@@ -73,24 +72,10 @@ def create():
             erro = "O fabricante é obrigatório."
 
         elif not patrimonio:
-            erro = "O número de patrimônio é obrigatório."
+            erro = "O patrimônio é obrigatório."
 
         elif not localizacao:
             erro = "A localização é obrigatória."
-
-        db = get_db()
-
-        patrimonio_existente = db.execute(
-            """
-            SELECT id
-            FROM equipamento
-            WHERE patrimonio = ?
-            """,
-            (patrimonio,),
-        ).fetchone()
-
-        if patrimonio_existente is not None:
-            erro = "Já existe um equipamento com esse patrimônio."
 
         if erro is not None:
 
@@ -98,49 +83,65 @@ def create():
 
         else:
 
-            db.execute(
-                """
-                INSERT INTO equipamento
-                (
-                    nome,
-                    categoria,
-                    fabricante,
-                    patrimonio,
-                    localizacao,
-                    status,
-                    usuario_id
+            db = get_db()
+
+            try:
+
+                db.execute(
+                    """
+                    INSERT INTO equipamento
+                    (
+                        nome,
+                        categoria,
+                        fabricante,
+                        patrimonio,
+                        localizacao,
+                        status,
+                        usuario_id
+                    )
+
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        nome,
+                        categoria,
+                        fabricante,
+                        patrimonio,
+                        localizacao,
+                        status,
+                        g.user["id"],
+                    ),
                 )
 
-                VALUES
-                (?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    nome,
-                    categoria,
-                    fabricante,
-                    patrimonio,
-                    localizacao,
-                    status,
-                    g.user["id"],
-                ),
-            )
+                db.commit()
 
-            db.commit()
+            except sqlite3.IntegrityError:
 
-            flash("Equipamento cadastrado com sucesso!")
+                flash("Já existe um equipamento com esse patrimônio.")
 
-            return redirect(url_for("equipamento.index"))
+            else:
+
+                flash("Equipamento cadastrado com sucesso!")
+
+                return redirect(url_for("equipamento.index"))
 
     return render_template("equipamento/create.html")
 
 
-def get_equipamento(id):
+def get_equipamento(id, check_author=True):
 
     equipamento = get_db().execute(
         """
-        SELECT *
-        FROM equipamento
-        WHERE id = ?
+        SELECT
+            e.*,
+            u.username
+
+        FROM equipamento e
+
+        JOIN user u
+            ON e.usuario_id = u.id
+
+        WHERE e.id = ?
         """,
         (id,),
     ).fetchone()
@@ -148,7 +149,7 @@ def get_equipamento(id):
     if equipamento is None:
         abort(404)
 
-    if equipamento["usuario_id"] != g.user["id"]:
+    if check_author and equipamento["usuario_id"] != g.user["id"]:
         abort(403)
 
     return equipamento
@@ -177,60 +178,52 @@ def update(id):
         elif not patrimonio:
             erro = "O patrimônio é obrigatório."
 
-        db = get_db()
-
-        patrimonio_existente = db.execute(
-            """
-            SELECT id
-            FROM equipamento
-            WHERE patrimonio = ?
-            AND id != ?
-            """,
-            (
-                patrimonio,
-                id,
-            ),
-        ).fetchone()
-
-        if patrimonio_existente:
-            erro = "Este patrimônio já está cadastrado."
-
         if erro is not None:
 
             flash(erro)
 
         else:
 
-            db.execute(
-                """
-                UPDATE equipamento
+            db = get_db()
 
-                SET
-                    nome = ?,
-                    categoria = ?,
-                    fabricante = ?,
-                    patrimonio = ?,
-                    localizacao = ?,
-                    status = ?
+            try:
 
-                WHERE id = ?
-                """,
-                (
-                    nome,
-                    categoria,
-                    fabricante,
-                    patrimonio,
-                    localizacao,
-                    status,
-                    id,
-                ),
-            )
+                db.execute(
+                    """
+                    UPDATE equipamento
 
-            db.commit()
+                    SET
+                        nome = ?,
+                        categoria = ?,
+                        fabricante = ?,
+                        patrimonio = ?,
+                        localizacao = ?,
+                        status = ?
 
-            flash("Equipamento atualizado com sucesso!")
+                    WHERE id = ?
+                    """,
+                    (
+                        nome,
+                        categoria,
+                        fabricante,
+                        patrimonio,
+                        localizacao,
+                        status,
+                        id,
+                    ),
+                )
 
-            return redirect(url_for("equipamento.index"))
+                db.commit()
+
+            except sqlite3.IntegrityError:
+
+                flash("Já existe um equipamento com esse patrimônio.")
+
+            else:
+
+                flash("Equipamento atualizado com sucesso!")
+
+                return redirect(url_for("equipamento.index"))
 
     return render_template(
         "equipamento/update.html",
@@ -253,6 +246,6 @@ def delete(id):
 
     db.commit()
 
-    flash("Equipamento removido com sucesso!")
+    flash("Equipamento excluído com sucesso!")
 
     return redirect(url_for("equipamento.index"))
