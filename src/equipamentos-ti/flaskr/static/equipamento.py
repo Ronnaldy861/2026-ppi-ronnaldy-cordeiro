@@ -15,6 +15,7 @@ from flaskr.db import get_db
 
 bp = Blueprint("equipamento", __name__)
 
+
 @bp.route("/")
 def index():
 
@@ -35,7 +36,7 @@ def index():
         FROM equipamento e
 
         JOIN user u
-        ON e.usuario_id = u.id
+            ON e.usuario_id = u.id
 
         ORDER BY e.nome
         """
@@ -45,31 +46,57 @@ def index():
         "equipamento/index.html",
         equipamentos=equipamentos,
     )
-    
+
+
 @bp.route("/create", methods=("GET", "POST"))
 @login_required
 def create():
 
     if request.method == "POST":
 
-        nome = request.form["nome"]
-        categoria = request.form["categoria"]
-        fabricante = request.form["fabricante"]
-        patrimonio = request.form["patrimonio"]
-        localizacao = request.form["localizacao"]
+        nome = request.form["nome"].strip()
+        categoria = request.form["categoria"].strip()
+        fabricante = request.form["fabricante"].strip()
+        patrimonio = request.form["patrimonio"].strip()
+        localizacao = request.form["localizacao"].strip()
         status = request.form["status"]
 
         erro = None
 
         if not nome:
-            erro = "Nome obrigatório."
+            erro = "O nome do equipamento é obrigatório."
+
+        elif not categoria:
+            erro = "A categoria é obrigatória."
+
+        elif not fabricante:
+            erro = "O fabricante é obrigatório."
+
+        elif not patrimonio:
+            erro = "O número de patrimônio é obrigatório."
+
+        elif not localizacao:
+            erro = "A localização é obrigatória."
+
+        db = get_db()
+
+        patrimonio_existente = db.execute(
+            """
+            SELECT id
+            FROM equipamento
+            WHERE patrimonio = ?
+            """,
+            (patrimonio,),
+        ).fetchone()
+
+        if patrimonio_existente is not None:
+            erro = "Já existe um equipamento com esse patrimônio."
 
         if erro is not None:
+
             flash(erro)
 
         else:
-
-            db = get_db()
 
             db.execute(
                 """
@@ -87,7 +114,6 @@ def create():
                 VALUES
                 (?, ?, ?, ?, ?, ?, ?)
                 """,
-
                 (
                     nome,
                     categoria,
@@ -101,21 +127,21 @@ def create():
 
             db.commit()
 
+            flash("Equipamento cadastrado com sucesso!")
+
             return redirect(url_for("equipamento.index"))
 
     return render_template("equipamento/create.html")
+
 
 def get_equipamento(id):
 
     equipamento = get_db().execute(
         """
         SELECT *
-
         FROM equipamento
-
         WHERE id = ?
         """,
-
         (id,),
     ).fetchone()
 
@@ -127,6 +153,7 @@ def get_equipamento(id):
 
     return equipamento
 
+
 @bp.route("/<int:id>/update", methods=("GET", "POST"))
 @login_required
 def update(id):
@@ -135,43 +162,81 @@ def update(id):
 
     if request.method == "POST":
 
+        nome = request.form["nome"].strip()
+        categoria = request.form["categoria"].strip()
+        fabricante = request.form["fabricante"].strip()
+        patrimonio = request.form["patrimonio"].strip()
+        localizacao = request.form["localizacao"].strip()
+        status = request.form["status"]
+
+        erro = None
+
+        if not nome:
+            erro = "O nome é obrigatório."
+
+        elif not patrimonio:
+            erro = "O patrimônio é obrigatório."
+
         db = get_db()
 
-        db.execute(
+        patrimonio_existente = db.execute(
             """
-            UPDATE equipamento
-
-            SET
-
-            nome=?,
-            categoria=?,
-            fabricante=?,
-            patrimonio=?,
-            localizacao=?,
-            status=?
-
-            WHERE id=?
+            SELECT id
+            FROM equipamento
+            WHERE patrimonio = ?
+            AND id != ?
             """,
-
             (
-                request.form["nome"],
-                request.form["categoria"],
-                request.form["fabricante"],
-                request.form["patrimonio"],
-                request.form["localizacao"],
-                request.form["status"],
+                patrimonio,
                 id,
             ),
-        )
+        ).fetchone()
 
-        db.commit()
+        if patrimonio_existente:
+            erro = "Este patrimônio já está cadastrado."
 
-        return redirect(url_for("equipamento.index"))
+        if erro is not None:
+
+            flash(erro)
+
+        else:
+
+            db.execute(
+                """
+                UPDATE equipamento
+
+                SET
+                    nome = ?,
+                    categoria = ?,
+                    fabricante = ?,
+                    patrimonio = ?,
+                    localizacao = ?,
+                    status = ?
+
+                WHERE id = ?
+                """,
+                (
+                    nome,
+                    categoria,
+                    fabricante,
+                    patrimonio,
+                    localizacao,
+                    status,
+                    id,
+                ),
+            )
+
+            db.commit()
+
+            flash("Equipamento atualizado com sucesso!")
+
+            return redirect(url_for("equipamento.index"))
 
     return render_template(
         "equipamento/update.html",
         equipamento=equipamento,
     )
+
 
 @bp.route("/<int:id>/delete", methods=("POST",))
 @login_required
@@ -182,10 +247,12 @@ def delete(id):
     db = get_db()
 
     db.execute(
-        "DELETE FROM equipamento WHERE id=?",
+        "DELETE FROM equipamento WHERE id = ?",
         (id,),
     )
 
     db.commit()
+
+    flash("Equipamento removido com sucesso!")
 
     return redirect(url_for("equipamento.index"))
