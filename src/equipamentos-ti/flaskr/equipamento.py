@@ -18,6 +18,7 @@ bp = Blueprint("equipamento", __name__)
 
 @bp.route("/")
 def index():
+
     db = get_db()
 
     equipamentos = db.execute(
@@ -30,6 +31,7 @@ def index():
             e.patrimonio,
             e.localizacao,
             e.status,
+            e.usuario_id,
             u.username
 
         FROM equipamento e
