@@ -19,3 +19,9 @@ Aplicação web desenvolvida em Flask para gerenciamento de equipamentos de tecn
 * SQLite
 * HTML
 * CSS
+
+
+## Metodologias
+
+* Kanban
+* Scrum

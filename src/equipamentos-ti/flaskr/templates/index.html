@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block header %}
+
+<h1>
+
+{% block title %}
+
+Sistema de Cadastro de Equipamentos de TI
+
+{% endblock %}
+
+</h1>
+
+{% endblock %}
+
+{% block content %}
+
+<p>
+
+Bem-vindo ao Sistema de Cadastro de Equipamentos de TI.
+
+</p>
+
+{% if g.user %}
+
+<p>
+
+Você está autenticado.
+
+</p>
+
+{% else %}
+
+<p>
+
+Faça login para utilizar o sistema.
+
+</p>
+
+{% endif %}
+
+{% endblock %}

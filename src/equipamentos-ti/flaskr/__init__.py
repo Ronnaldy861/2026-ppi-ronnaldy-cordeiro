@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask, render_template
 
 
 def create_app(test_config=None):
@@ -24,12 +24,17 @@ def create_app(test_config=None):
 
     os.makedirs(app.instance_path, exist_ok=True)
 
+    # Banco de dados
     from . import db
-
     db.init_app(app)
 
+    # Autenticação
+    from . import auth
+    app.register_blueprint(auth.bp)
+
+    # Página inicial
     @app.route("/")
     def index():
-        return "<h1>Sistema de Cadastro de Equipamentos de TI</h1>"
+        return render_template("index.html")
 
     return app
