@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block header %}
+
+<h1>{% block title %}Equipamentos{% endblock %}</h1>
+
+{% if g.user %}
+<a class="action" href="{{ url_for('equipamento.create') }}">
+    Novo Equipamento
+</a>
+{% endif %}
+
+{% endblock %}
+
+{% block content %}
+
+{% for equipamento in equipamentos %}
+
+<article class="post">
+
+<header>
+
+<div>
+
+<h2>{{ equipamento["nome"] }}</h2>
+
+<div class="about">
+
+Categoria: {{ equipamento["categoria"] }}
+
+<br>
+
+Fabricante: {{ equipamento["fabricante"] }}
+
+<br>
+
+Patrimônio: {{ equipamento["patrimonio"] }}
+
+<br>
+
+Localização: {{ equipamento["localizacao"] }}
+
+<br>
+
+Status: {{ equipamento["status"] }}
+
+<br>
+
+Responsável: {{ equipamento["username"] }}
+
+</div>
+
+</div>
+
+{% if g.user["username"] == equipamento["username"] %}
+
+<a
+class="action"
+href="{{ url_for('equipamento.update', id=equipamento['id']) }}">
+
+Editar
+
+</a>
+
+{% endif %}
+
+</header>
+
+</article>
+
+{% if not loop.last %}
+<hr>
+{% endif %}
+
+{% endfor %}
+
+{% endblock %}

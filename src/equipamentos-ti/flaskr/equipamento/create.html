@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block header %}
+
+<h1>
+
+{% block title %}
+
+Cadastrar Equipamento
+
+{% endblock %}
+
+</h1>
+
+{% endblock %}
+
+{% block content %}
+
+<form method="post">
+
+<label>Nome</label>
+
+<input
+name="nome"
+required>
+
+<label>Categoria</label>
+
+<input
+name="categoria"
+required>
+
+<label>Fabricante</label>
+
+<input
+name="fabricante"
+required>
+
+<label>Número do Patrimônio</label>
+
+<input
+name="patrimonio"
+required>
+
+<label>Localização</label>
+
+<input
+name="localizacao"
+required>
+
+<label>Status</label>
+
+<select name="status">
+
+<option>Disponível</option>
+
+<option>Em uso</option>
+
+<option>Em manutenção</option>
+
+<option>Descartado</option>
+
+</select>
+
+<input
+type="submit"
+value="Salvar">
+
+</form>
+
+{% endblock %}
